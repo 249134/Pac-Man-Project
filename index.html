@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>吃豆人游戏</title>
+
+    <link rel="stylesheet" href="style.css">
+    <script src="libraries/p5.min.js"></script>
+    <script src="libraries/p5.sound.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1><i class="fas fa-ghost"></i> 吃豆人游戏</h1>
+        </header>
+
+        <div class="game-wrapper">
+            <div class="left-panel">
+                <div class="info-card">
+                    <h3><i class="fas fa-keyboard"></i> 控制说明</h3>
+                    <div class="controls-info">
+                        <div class="control-item">
+                            <div class="keys-group">
+                                <div class="key">W</div>
+                                <div class="key">↑</div>
+                            </div>
+                            <span>向上移动</span>
+                        </div>
+                        <div class="control-item">
+                            <div class="keys-group">
+                                <div class="key">A</div>
+                                <div class="key">←</div>
+                            </div>
+                            <span>向左移动</span>
+                        </div>
+                        <div class="control-item">
+                            <div class="keys-group">
+                                <div class="key">S</div>
+                                <div class="key">↓</div>
+                            </div>
+                            <span>向下移动</span>
+                        </div>
+                        <div class="control-item">
+                            <div class="keys-group">
+                                <div class="key">D</div>
+                                <div class="key">→</div>
+                            </div>
+                            <span>向右移动</span>
+                        </div>
+                        <div class="control-item">
+                            <div class="key">空格</div>
+                            <span>暂停/继续</span>
+                        </div>
+                        <div class="control-item">
+                            <div class="key">R</div>
+                            <span>重新开始</span>
+                        </div>
+                        <div class="control-item">
+                            <div class="key">Q</div>
+                            <span>调试模式</span>
+                        </div>
+                    </div>
+                </div>      
+                
+                <div class="info-card tips-card">
+                    <h3><i class="fas fa-lightbulb"></i> 游戏提示</h3>
+                    <ul class="tips-list">
+                        <li>使用传送通道可以快速移动</li>
+                        <li>超级豆子可以暂时吓退幽灵</li>
+                        <li>收集所有豆子即可通关</li>
+                        <li>吃蓝色幽灵可获得200分</li>
+                        <li>通关可获得1000分奖励</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="center-panel">
+                <div id="game-container"></div>
+            </div>
+
+            <div class="right-panel">
+                <div class="info-card">
+                    <h3><i class="fas fa-gamepad"></i> 游戏控制</h3>
+                    <div class="control-buttons">
+                        <button id="pause-game" class="btn btn-warning">
+                            <i class="fas fa-pause"></i> 暂停游戏
+                        </button>
+                        <button id="restart" class="btn btn-secondary">
+                            <i class="fas fa-redo"></i> 重新开始
+                        </button>
+                        <button id="toggle-ai" class="btn btn-purple">
+                            <i class="fas fa-brain"></i> AI幽灵: 开启
+                        </button>
+                        <button id="debug-toggle" class="btn btn-teal">
+                            <i class="fas fa-code"></i> 调试模式: 关闭
+                        </button>
+                    </div>
+                </div>
+                <div class="info-card">
+                    <h3><i class="fas fa-chart-line"></i> 游戏状态</h3>
+                    <div class="status-grid">
+                        <div class="status-item">
+                            <span class="label">分数</span>
+                            <span id="score" class="value">0</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="label">生命</span>
+                            <span id="lives" class="value">3</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="label">豆子进度</span>
+                            <span id="progress-percent" class="value">0%</span>
+                        </div>
+                        <div class="status-item full-width">
+                            <div class="progress-container">
+                                <div id="progress-fill" class="progress-fill"></div>
+                            </div>
+                        <div class="status-item full-width pellets-info">
+                            <div class="pellets-display">
+                                剩余豆子: <span id="pellets-count">0</span>/<span id="total-pellets">0</span>
+                            </div>
+                        </div>
+                    
+                    <div class="power-status">
+                        <h4><i class="fas fa-bolt"></i> 状态效果</h4>
+                        <div class="power-item">
+                            <span class="power-label">超级模式:</span>
+                            <span id="power-status" class="power-value">未激活</span>
+                        </div>
+                        <div class="power-item">
+                            <span class="power-label">AI幽灵:</span>
+                            <span id="ai-status" class="power-value active">开启</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 欢迎界面 -->
+        <div id="welcome-screen" class="modal-screen">
+            <div class="modal-content">
+                <h2><i class="fas fa-ghost"></i> 欢迎来到吃豆人游戏!</h2>
+                <p class="welcome-subtitle">收集所有豆子，躲避幽灵，获得最高分!</p>
+                
+                <div class="game-rules">
+                    <h3><i class="fas fa-book"></i> 游戏规则</h3>
+                    <div class="rules-grid">
+                        <div class="rule">
+                            <div class="rule-icon">
+                                <i class="fas fa-dot-circle"></i>
+                            </div>
+                            <h4>普通豆子</h4>
+                            <p>每个+10分，收集所有豆子通关</p>
+                        </div>
+                        <div class="rule">
+                            <div class="rule-icon">
+                                <i class="fas fa-star"></i>
+                            </div>
+                            <h4>超级豆子</h4>
+                            <p>每个+50分，暂时吓退幽灵</p>
+                        </div>
+                        <div class="rule">
+                            <div class="rule-icon">
+                                <i class="fas fa-exchange-alt"></i>
+                            </div>
+                            <h4>传送通道</h4>
+                            <p>可以穿越到地图另一侧</p>
+                        </div>
+                        <div class="rule">
+                            <div class="rule-icon">
+                                <i class="fas fa-ghost"></i>
+                            </div>
+                            <h4>幽灵</h4>
+                            <p>触碰幽灵失去一条生命</p>
+                        </div>
+                        <div class="rule">
+                            <div class="rule-icon">
+                                <i class="fas fa-bolt"></i>
+                            </div>
+                            <h4>蓝色幽灵</h4>
+                            <p>超级模式下可吃，每个+200分</p>
+                        </div>
+                        <div class="rule">
+                            <div class="rule-icon">
+                                <i class="fas fa-trophy"></i>
+                            </div>
+                            <h4>通关奖励</h4>
+                            <p>成功通关获得1000分奖励</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="welcome-controls">
+                    <button id="start-game-modal" class="btn btn-primary btn-large">
+                        <i class="fas fa-play-circle"></i> 开始游戏
+                    </button>
+                    <p class="welcome-hint">按 Enter 键也可以开始游戏</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 游戏结束界面 -->
+        <div id="game-over-screen" class="modal-screen">
+            <div class="modal-content">
+                <h2><i class="fas fa-skull-crossbones"></i> 游戏结束!</h2>
+                <p>你的生命值已用尽</p>
+                <div class="final-score">最终得分: <span id="final-score">0</span></div>
+                <button id="restart-game" class="btn btn-primary btn-large">
+                    <i class="fas fa-redo"></i> 重新开始
+                </button>
+            </div>
+        </div>
+
+        <!-- 游戏胜利界面 -->
+        <div id="game-win-screen" class="modal-screen">
+            <div class="modal-content">
+                <h2><i class="fas fa-trophy"></i> 恭喜通关!</h2>
+                <p>你成功收集了所有豆子</p>
+                <div class="final-score">本次得分: <span id="win-score">0</span></div>
+                <div class="win-buttons">
+                    <button id="restart-win" class="btn btn-primary btn-large">
+                        <i class="fas fa-redo"></i> 重新开始
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="game.js"></script>
+</body>
+</html>
